@@ -173,13 +173,50 @@ int main(int argc, char *argv[]) {
 			posZ -= 0.2;
 			flag = 0;
 		}
+		
+		
+		// keys with multiple moves at once
+		if (wchar == L'm') {
+			yaw += 3.14/16;
+			roll -= 3.14/16;
+			//try roll +=
+			flag = 0;
+			std::wcout << "combining O and L" << std::endl;
+		}
+		if (wchar == L'n') {
+			yaw -= 3.14/16;
+			roll += 3.14/16;
+			//try roll -=
+			flag = 0;
+			std::wcout << "combining U and J" << std::endl;
+		}
+		
 
 		// exit
 		if (wchar == L'b') {
 			keepRunning = false;
 			// robot.move(sit);
 			spot.sit();
+			std::wcout << "TURNING OFF. PLEASE STANDBY." << std::endl;
+			roll = 0;
+			pitch = 0;
+			yaw = 0;
+			posX = 0;
+			posY = 0;
+			posZ = 0;
 			break;
+		}
+		if (wchar == L'v') {
+			//keepRunning = false;
+			// robot.move(sit);
+			std::wcout << "RESETTING JOINT POSITIONS" << std::endl;
+			roll = 0;
+			pitch = 0;
+			yaw = 0;
+			posX = 0;
+			posY = 0;
+			posZ = 0;
+			
 		}
 		
 		 Trajectory3D trajPose;
