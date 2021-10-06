@@ -9,12 +9,14 @@
 #include <assert.h>
 #include <map>
 #include <set>
+#include <stdlib.h>
 
 #include <functional>
 #include <sys/ioctl.h> //For FIONREAD.
 #include <termios.h>
 
 //#include <spot/clients/robot_state.h>
+//using namespace std;
 
 //Call this at program start to setup for kbhit.
 void initTerminalInput()
@@ -74,9 +76,9 @@ int main(int argc, char *argv[]) {
 	// robot.trajectoryMove(trajTest, ODOM, 10);
 	// sleep(10);
 	spot.stand();
-
+     
 	// move
-	initTerminalInput();
+	//initTerminalInput();
 	bool keepRunning = true;
 	
 	double posX = 0;
@@ -86,8 +88,10 @@ int main(int argc, char *argv[]) {
 	double roll = 0;
 	double yaw = 0;
 
-	while(keepRunning){
-		wchar_t wchar = getWCharClean();
+	char commands[] = "ccccccccc";
+while(1) {
+	for(int i = 0; i < sizeof(commands)/sizeof(commands[0]); i++) {
+		//wchar_t wchar = getWCharClean();
 		
 		// initialize velocities and angular velocity (rot)
 		double velX = 0;
@@ -97,103 +101,106 @@ int main(int argc, char *argv[]) {
 		// xy translation
 		int flag = 0;
 
-		if (wchar == L'w') {
+		if (commands[i] == 'w') {
 			velX += 1.0;
 			flag = 1;
 		}
-		if (wchar == L'a') {
+		if (commands[i] == 'a') {
 			velY += 1.0;
 			flag = 1;
 		}
-		if (wchar == L's') {
+		if (commands[i] == 's') {
 			velX -= 1.0;
 			flag = 1;
 		}
-		if (wchar == L'd') {
+		if (commands[i] == 'd') {
 			velY -= 1.0;
 			flag = 1;
 		}
-		if (wchar == L'q') {
+		if (commands[i] == 'q') {
 			rot += 0.5;
 			flag = 1;
 		}
-		if (wchar == L'e') {
+		if (commands[i]== 'e') {
 			rot -= 0.5;
 			flag = 1;
 		}
 
 		// orientation (once we figure out)
-		if (wchar == L'i') {
-			pitch += 3.14/16;
+		if (commands[i]== 'i') {
+			pitch += 3.14/14;
 			flag = 0;
 		}
-		if (wchar == L'j') {
+		if (commands[i]== 'j') {
 			roll += 3.14/16;
 			flag = 0;
 		}
-		if (wchar == L'k') {
-			pitch -= 3.14/16;
+		if (commands[i] == 'k') {
+			pitch -= 3.14/14;
 			flag = 0;
 		}
-		if (wchar == L'l') {
+		if (commands[i] == 'l') {
 			roll -= 3.14/16;
 			flag = 0;
 		}
-		if (wchar == L'u') {
+		if (commands[i]== 'u') {
 			yaw -= 3.14/16;
 			flag = 0;
 		}
-		if (wchar == L'o') {
+		if (commands[i]== 'o') {
 			yaw += 3.14/16;
 			flag = 0;
 		}
 
 		// height / positions ?
-		if (wchar == L'r') {
+		if (commands[i] == 'r') {
 			posX += 0.2;
 			flag = 0;
 		}
-		if (wchar == L'f') {
+		if (commands[i] == 'f') {
 			posX -= 0.2;
 			flag = 0;
 		}
-		if (wchar == L't') {
+		if (commands[i] =='t') {
 			posY += 0.2;
 			flag = 0;
 		}
-		if (wchar == L'g') {
+		if (commands[i] =='g') {
 			posY -= 0.2;
 			flag = 0;
 		}
-		if (wchar == L'y') {
+		if (commands[i]== 'y') {
 			posZ += 0.2;
 			flag = 0;
 		}
-		if (wchar == L'h') {
+		if (commands[i]== 'h') {
 			posZ -= 0.2;
 			flag = 0;
 		}
 		
 		
 		// keys with multiple moves at once
-		if (wchar == L'm') {
-			yaw += 3.14/16;
+		if (commands[i]== 'm') {
+			yaw += 3.14/8;
 			roll -= 3.14/16;
-			//try roll +=
 			flag = 0;
 			std::wcout << "combining O and L" << std::endl;
 		}
-		if (wchar == L'n') {
-			yaw -= 3.14/16;
+		if (commands[i] == 'n') {
+			yaw -= 3.14/8;
 			roll += 3.14/16;
-			//try roll -=
 			flag = 0;
 			std::wcout << "combining U and J" << std::endl;
+		}
+		if (commands[i] == 'c') {
+			velX += 2.0;
+			flag = 1;
+			rot += 1.5;
 		}
 		
 
 		// exit
-		if (wchar == L'b') {
+		if (commands[i] == 'b') {
 			keepRunning = false;
 			// robot.move(sit);
 			spot.sit();
@@ -206,7 +213,7 @@ int main(int argc, char *argv[]) {
 			posZ = 0;
 			break;
 		}
-		if (wchar == L'v') {
+		if (commands[i] == 'v') {
 			//keepRunning = false;
 			// robot.move(sit);
 			std::wcout << "RESETTING JOINT POSITIONS" << std::endl;
@@ -218,7 +225,7 @@ int main(int argc, char *argv[]) {
 			posZ = 0;
 			
 		}
-		
+		std::wcout << "KEYPRESS: " << commands[i] << std::endl;
 		 Trajectory3D trajPose;
 		 trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 		 spot.setBodyPose(trajPose, true);
@@ -242,8 +249,10 @@ int main(int argc, char *argv[]) {
 			spot.velocityMove(velX, velY, rot, 500, FLAT_BODY);
 			
 		}
-	
+
+		sleep(1);
 	}
+} //really jank while loop ending
 	return 0;
 }
 
