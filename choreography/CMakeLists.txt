@@ -22,8 +22,12 @@ include_directories(
 )
 
 
-add_executable(spot_teleop
-spot_teleop.cpp
+add_executable(original_choreo
+original_choreo.cpp
+)
+
+add_executable(demo
+demo.cpp
 )
 
 
