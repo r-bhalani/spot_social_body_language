@@ -71,19 +71,7 @@ static wchar_t getWCharClean()
   return inputWChar;
 }
 
-void walkInCircle() {
-	velX += 2.0;
-	rot += 1.5;
-	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
-	spot.setBodyPose(trajPose, true);
-}
-
-void sit() {
-	pitch -= 3.14/7;
-	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
-	spot.setBodyPose(trajPose, true);
-}
-
+// move the spot - should call each time after changing body position
 void issueMove() {
 	// issue move
 	if (velY == 0 && velX == 0 && rot == 0 ){
@@ -94,72 +82,122 @@ void issueMove() {
 		spot.velocityMove(velX, velY, rot, 500, FLAT_BODY);
 		
 	}
-	sleep(1);
+	usleep(500000);
 }
 
+// walk in a circle counterclock-wise
+void walkInCircleCounter() {
+	// speed
+	velX = 2.0;
+	// direction of rotation (counterclockwise)
+	rot = 1.5;
+	issueMove();
+}
+
+// walk in circle clockwise
+void walkInCircleClockwise() {
+	// speed
+	velX = 2.0;
+	// direction of rotation (clockwise)
+	rot = -1.5;
+	issueMove();
+}
+
+// sit with front facing upwards and bottom pointed downwards
+void sit() {
+	pitch -= 3.14/7;
+	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
+	spot.setBodyPose(trajPose, true);
+	issueMove();
+}
+
+// wag tail by moving bottom to the left once, right twice, and back to the left to center
 void wagTail() {
-	//m 
-	yaw += 3.14/8;
-	roll -= 3.14/16;
-	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
-	spot.setBodyPose(trajPose, true);
-	issueMove();
-	sleep(1);
-	// 2*n
+	// twist 2 right
 	yaw -= 3.14/4;
 	roll += 3.14/8;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
-	sleep(1);
-	//m 
+	// twist left
+	yaw += 3.14/4;
+	roll -= 3.14/8;
+	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
+	spot.setBodyPose(trajPose, true);
+	issueMove();
+}
+
+// one wag to the left 
+void wagLeft() {
 	yaw += 3.14/8;
 	roll -= 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
 }
 
-void oneWag() {
-	yaw += 3.14/8;
-	roll -= 3.14/16;
+// one wag to the right
+void wagRight() {
+	yaw -= 3.14/8;
+	roll += 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
 }
 
-void otherWag() {
-	yaw -= 3.14/4;
-	roll += 3.14/8;
-	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
-	spot.setBodyPose(trajPose, true);
-}
-
+// point front of torso downwards and point bottom upwards
 void playBow() {
 	pitch += (3.14*3)/14;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
 }
 
+// wags tail while in play bow mode
 void playBowWagTail() {
 	pitch += 3.14/7;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
-	sleep(1);
+	wagLeft();
+	issueMove();
 	wagTail();
+	issueMove();
+	wagRight();
+	issueMove();
 }
 
+// testing if the yaw changes
 void yawChange() {
 	yaw -= 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
 }
+
+// testing if the roll changes
 void rollChange() {
 	roll += 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
+
 }
+
+// spin counterclockwise in one place
+void spinCounterClock() {
+	rot += 1;
+	issueMove();
+}
+
+// spin clockwise in one place
+void spinClockwise() {
+	rot -= 1;
+	issueMove();
+}
+
+// reset all the positions of the body 
 void reset() {
-	pitch = 0;
 	posX = 0;
 	posY = 0;
 	posZ = 0;
@@ -168,8 +206,75 @@ void reset() {
 	yaw = 0;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
+	issueMove();
 }
 
+void printPosition() {
+	//printing position changes
+	std::wcout << "Positions" << std::endl;
+	std::wcout << "velX: " << velX << std::endl;
+	std::wcout << "velY: " << velY << std::endl;
+	std::wcout << "rot: " << rot << std::endl;
+	std::wcout << "roll: " << roll << std::endl;
+	std::wcout << "pitch: " << pitch << std::endl;
+	std::wcout << "yaw: " << yaw << std::endl;
+	std::wcout << "---------------" << std::endl;
+}
+
+void wagDemo() {
+	sit();
+	wagLeft();
+	for(int i = 0; i < 6; i++) {
+		wagTail();
+	}
+	wagRight();
+	usleep(500000);
+	reset();
+	usleep(500000);
+	wagLeft();
+	for(int i = 0; i < 6; i++) {
+		wagTail();
+	}
+	wagRight();
+	playBow();
+	wagLeft();
+	for(int i = 0; i < 6; i++) {
+		wagTail();
+	}
+	wagRight();
+	usleep(500000);
+	reset();		
+	usleep(500000);
+}
+
+void circleDemo() {
+	for(int i = 0; i < 8; i++) {
+		walkInCircleCounter();
+		usleep(200000);
+	}
+	usleep(500000);
+	for(int i = 0; i < 8; i++) {
+		walkInCircleClockwise();
+		usleep(200000);
+	}
+	usleep(500000);
+}
+
+void spinDemo() {
+	for(int i = 0; i < 2; i++) {
+		// spin both directions i times
+		spinClockwise();
+		spinCounterClock();
+	}
+}
+
+void walk() {
+	velX = 1.0;
+	// MOVE 5 steps forward with speed of 1.0 
+	for(int i = 0; i < 5; i++) {
+		issueMove();
+	}
+}
 
 // main function for running Spot clients
 int main(int argc, char *argv[]) {
@@ -181,40 +286,22 @@ int main(int argc, char *argv[]) {
 
 	// spotbase testing code
 	spot.basicInit(username, password);
-	//ClientLayer::RobotStateClient data(username, password); 
-
-	// Trajectory2D trajTest;
-	// trajTest.addPoint(0.5, 0, 0, 2);
-	// //trajTest.addPoint(1, 0, 0, 2);
-	// robot.trajectoryMove(trajTest, ODOM, 10);
-	// sleep(10);
-	spot.stand();
-     sleep(1);
-	// move
-	//initTerminalInput();
-	bool keepRunning = true;
 	
-	while(keepRunning) {
-		walkInCircle();
-		issueMove();
-		sleep(1);
-		walkInCircle();
-		issueMove();
-		sleep(1);
-		walkInCircle();
-		issueMove();
-		sleep(1);
-		 //printing position changes
-		 std::wcout << "Positions" << std::endl;
-		 std::wcout << "velX: " << velX << std::endl;
-		 std::wcout << "velY: " << velY << std::endl;
-		 std::wcout << "rot: " << rot << std::endl;
-		 std::wcout << "roll: " << roll << std::endl;
-		 std::wcout << "pitch: " << pitch << std::endl;
-		 std::wcout << "yaw: " << yaw << std::endl;
-		 std::wcout << "---------------" << std::endl;
+	// stand and wait
+	spot.stand();
+	usleep(700000);
 
-	keepRunning = false;	
+	// main function to run
+	bool keepRunning = true;
+
+	while(keepRunning) {
+		wagDemo();
+		circleDemo();
+		spinDemo();
+		reset();
+
+		keepRunning = false;
 	}
+
 	return 0;
 }
