@@ -105,7 +105,7 @@ void walkInCircleClockwise() {
 
 // sit with front facing upwards and bottom pointed downwards
 void sit() {
-	pitch -= 3.14/7;
+	pitch = -3.14/7;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -114,14 +114,14 @@ void sit() {
 // wag tail by moving bottom to the left once, right twice, and back to the left to center
 void wagTail() {
 	// twist 2 right
-	yaw -= 3.14/4;
-	roll += 3.14/8;
+	yaw = -3.14/8;
+	roll = 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
 	// twist left
-	yaw += 3.14/4;
-	roll -= 3.14/8;
+	yaw = 3.14/8;
+	roll = -3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -129,8 +129,8 @@ void wagTail() {
 
 // one wag to the left 
 void wagLeft() {
-	yaw += 3.14/8;
-	roll -= 3.14/16;
+	yaw = 3.14/8;
+	roll = -3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -138,8 +138,8 @@ void wagLeft() {
 
 // one wag to the right
 void wagRight() {
-	yaw -= 3.14/8;
-	roll += 3.14/16;
+	yaw = -3.14/8;
+	roll = 3.14/16;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -147,7 +147,7 @@ void wagRight() {
 
 // point front of torso downwards and point bottom upwards
 void playBow() {
-	pitch += (3.14*3)/14;
+	pitch = (3.14*3)/14;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -155,7 +155,7 @@ void playBow() {
 
 // wags tail while in play bow mode
 void playBowWagTail() {
-	pitch += 3.14/7;
+	pitch = 3.14/7;
 	trajPose.addPointRPY(posX, posY, posZ, roll, pitch, yaw, 1);
 	spot.setBodyPose(trajPose, true);
 	issueMove();
@@ -222,6 +222,7 @@ void printPosition() {
 }
 
 void wagDemo() {
+	// sit while wagging tail
 	sit();
 	wagLeft();
 	for(int i = 0; i < 6; i++) {
@@ -229,6 +230,7 @@ void wagDemo() {
 	}
 	wagRight();
 	usleep(500000);
+	// normal position and wag tail
 	reset();
 	usleep(500000);
 	wagLeft();
@@ -236,6 +238,7 @@ void wagDemo() {
 		wagTail();
 	}
 	wagRight();
+	// wag tail while in play bow
 	playBow();
 	wagLeft();
 	for(int i = 0; i < 6; i++) {
@@ -248,8 +251,11 @@ void wagDemo() {
 }
 
 void circleDemo() {
+	// walk in a circle in both directions 
+	// 8 makes a complete circle, 4 is a half circle, etc.
 	for(int i = 0; i < 8; i++) {
 		walkInCircleCounter();
+		// need a sleep otherwise will not go to next call properly
 		usleep(200000);
 	}
 	usleep(500000);
@@ -295,11 +301,17 @@ int main(int argc, char *argv[]) {
 	bool keepRunning = true;
 
 	while(keepRunning) {
+		// walk to human then sit in front of then
+		walk();
+		sit();
+		// do motions demos
 		wagDemo();
 		circleDemo();
 		spinDemo();
+		// reset then lie down
 		reset();
-
+		spot.sit();
+		// break loop
 		keepRunning = false;
 	}
 
