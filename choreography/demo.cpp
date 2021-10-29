@@ -1,13 +1,20 @@
 #include <demo.h>
 
 using namespace std;
+// velocity move has a max trajectory points of 6
+// trajectory pose also has a maximum (not sure) so set body pose at the end of each method
+// uses cubic interpolation for the trajectory
 
 // struct for all the movement data parameters
 double *point = new double[n_items];
 Trajectory3D trajPose; // trajectory pose used for setting pos and pitch,roll,yaw
 Spot spot; // spot object
 int ctr = 0;
+// might have to check if there is a visible difference between 250, 500, and 1000
 int incr = 500;
+
+/*
+// terminal input code, not necessary for demo
 //Call this at program start to setup for kbhit.
 void initTerminalInput()
 {
@@ -45,15 +52,15 @@ static wchar_t getWCharClean()
     break;
   } while (true);
   return inputWChar;
-}
+} */
 
 
-// move the spot - should call each time after changing body position
+// move the spot - should call each time after changing body movement (not position)
+// should still call even if set movement to 0 (or no longer moving)
 void issueMove() {
-	// issue move
+	// stand or move based on velocity and angular rotation
 	if (point[velY] == 0 && point[velX] == 0 && point[rot] == 0){
 		spot.stand();
-		
 	}
 	else {
 		spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY);
@@ -61,6 +68,8 @@ void issueMove() {
 	}
 }
 
+// run body pose trajectory by setting the body pose and telling spot to stand
+// trajectory seems to have some limit so should run trajectory at least twice 
 void runTrajectory() {
 	spot.setBodyPose(trajPose, true);
 	spot.stand();
@@ -68,7 +77,7 @@ void runTrajectory() {
 
 // walk in a circle counterclock-wise
 void walkInCircleCounter() {
-	// speed
+	// speed forward (positive)
 	point[velX] = 2.0;
 	// direction of rotation (counterclockwise)
 	point[rot] = 1.5;
@@ -77,7 +86,7 @@ void walkInCircleCounter() {
 
 // walk in circle clockwise
 void walkInCircleClockwise() {
-	// speed
+	// speed forward (positive)
 	point[velX] = 2.0;
 	// direction of rotation (clockwise)
 	point[rot] = -1.5;
@@ -86,6 +95,7 @@ void walkInCircleClockwise() {
 
 // sit with front facing upwards and bottom pointed downwards
 void sit() {
+	// tilt torso backwards along z axis
 	point[pitch] = -3.14/7;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
 	runTrajectory();
@@ -93,11 +103,11 @@ void sit() {
 
 // wag tail by moving bottom to the left once, right twice, and back to the left to center
 void wagMotion() {
-	// twist 2 right
+	// twist to the right
 	point[yaw] = -3.14/8;
 	point[roll] = 3.14/16;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
-	// twist left
+	// twist to the left
 	point[yaw] = 3.14/8;
 	point[roll] = -3.14/16;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
@@ -120,6 +130,7 @@ void wagRight() {
 
 // point front of torso downwards and point bottom upwards
 void playBow() {
+	// tilt torso forward along z axis
 	point[pitch] = (3.14*3)/14;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
 	runTrajectory();
@@ -128,38 +139,44 @@ void playBow() {
 
 // spin counterclockwise in one place
 void spinCounterClock() {
+	// set the rotation to 1
+	// so turn the torso 1 (radian?) counterClockwise from current body frame  
 	point[rot] = 1;
 	issueMove();
 }
 
 // spin clockwise in one place
 void spinClockwise() {
+	// set the rotation to 1
+	// so turn the torso -1 clockwise from current body frame  
 	point[rot] = -1;
 	issueMove();
 }
 
 // reset all the positions of the body 
 void reset() {
+	// this for some reason messes up the entire trajectory even though the time should be correct
 	point[posX] = 0;
 	point[posY] = 0;
 	point[posZ] = 0;
 	point[pitch] = 0;
 	point[roll] = 0;
 	point[yaw] = 0;
-	trajPose.addPointRPY(0, 0, 0, 0, 0, 0, ctr+=10*incr);
+	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
 	runTrajectory();
 	
 }
 
-
+// reset the pitch to 0
 void resetPitch() {
+	// using this instead of general reset for wag demo 
 	point[pitch] = 0;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch], point[yaw], ctr+=incr);
 	runTrajectory();
 }
 
 void printPosition() {
-	//printing position changes
+	// printing position changes to check if correct
 	std::wcout << "Positions" << std::endl;
 	std::wcout << "velX: " << point[velX] << std::endl;
 	std::wcout << "velY: " << point[velY] << std::endl;
@@ -169,40 +186,35 @@ void printPosition() {
 	std::wcout << "yaw: " << point[yaw] << std::endl;
 	std::wcout << "---------------" << std::endl;
 }
-/*
-    posY,
-    posZ,
-    pitch,
-    roll,
-    yaw,
-    velX,
-    velY,
-    rot,
-
-//closing comment here*/
-
-
 
 // general wagging motion total
 void wagTail() {
+	int numWags = 6;
+	// cubic interpolation
 	trajPose.setPosInterp(true);
-	for(int i = 0; i < 6; i ++) {
+	for(int i = 0; i < numWags; i ++) {
+		// pack wag tail motion left and right n times
+		// might change so that changes point[yaw] and point[roll] and not placing number directly into the method
 		trajPose.addPointRPY(point[posX], point[posY], point[posZ], -3.14/16, point[pitch], 3.14/8, ctr+=incr);
 		trajPose.addPointRPY(point[posX], point[posY], point[posZ], 3.14/16, point[pitch], -3.14/8, ctr+=incr);
 	}
+	// reset the body pose back to center of y and z axis
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], 0, point[pitch], 0, ctr+=incr);
 	runTrajectory();
 }
 
 // wags tail while in play bow mode
 void playBowWagTail() {
+	// tilt face downwards
 	point[pitch] = 3.14/7;
 	trajPose.addPointRPY(point[posX], point[posY], point[posZ], point[roll], point[pitch],point[yaw], ctr+=incr);
 	runTrajectory();
+	// wag tail
 	wagTail();
 }
 
 void wagDemo() {
+	// cubic interpolation (false is linear interpolation)
 	trajPose.setPosInterp(true);
 	// sit while wagging tail
 	sit();
@@ -213,6 +225,7 @@ void wagDemo() {
 	// wag tail while in play bow
 	playBow();
 	wagTail();
+	// reset pitch so stands straight
 	resetPitch();		
 }
 
@@ -222,38 +235,59 @@ void circleDemo() {
 	for(int i = 0; i < 12; i++) {
 		walkInCircleCounter();
 	}
-	/*for(int i = 0; i < 8; i++) {
+	// spin to the opposite direction
+	for(int i = 0; i < 8; i++) {
 		spinClockwise();
-	}*/
-	//usleep(750000);
-	
-	//point[velX] = 0;
-	//point[rot] = 0;
-	//usleep(500000);
+	}
+	// now walk in a circleclockwise
+	for(int i = 0; i < 12; i++) {
+		walkInCircleClockwise();
+	}
+	// reset the velocity and rot to 0
+	point[velX] = 0;
+	point[rot] = 0;
+	// some reason need an issue move here? or will skip directly to velx and rot being 0
+	issueMove();
 }
 
+// demo code to spin in both directions
 void spinDemo() {
 	// spin both directions i times
+	std::wcout << "ctr: " << ctr << std::endl;
 	int LOOP = 8;
+	// spin clockwise 8 times
 	for(int i = 0; i < LOOP; i++) {
 		spinClockwise();
 	}
+	// spin counterClockwise 8 times
 	for(int i = 0; i < LOOP; i++) {
-		// spin counter clockwise i times
 		spinCounterClock();
 	}
-	//point[rot] = 0;
-	//issueMove();
+	// reset rot to 0
+	point[rot] = 0;
+	issueMove();
 }
 
-void walk() {
+// walk a number of steps forward
+void walkForward() {
+	int steps = 6;
 	point[velX] = 1.0;
 	// MOVE 5 steps forward with speed of 1.0 
-	for(int i = 0; i < 5; i++) {
+	for(int i = 0; i < steps; i++) {
 		issueMove();
 	}
 }
 
+// walk a number of steps backwards
+void walkBackward() {
+	int steps = 6;
+	// negative x velocity is backwards
+	point[velX] = -1.0;
+	// call velocity move the number of times spot should move
+	for(int i = 0; i < steps; i++) {
+		issueMove();
+	}
+} 
 
 // main function for running Spot clients
 int main(int argc, char *argv[]) {
@@ -266,46 +300,30 @@ int main(int argc, char *argv[]) {
 	// spotbase testing code
 	spot.basicInit(username, password);
 	
-	// stand and wait
+	// stand and wait (otherwise wobbles when stands to reach trajectory)
+	// maybe if set initial trajectory to a larger number will not need usleep
 	spot.stand();
 	usleep(1000000);
 
 	// main function to run
 	bool keepRunning = true;
 
-	double *point = new double[n_items];
+	// fill the point vector with body enums to 0
 	fill_n(point, n_items, 0);
-	//wagDemo();
-	//circleDemo();
+
+	// main code to run demo
+	//note - why isn't walk running?? something wrong with velocity move trajectory
+	walkForward();
 	
-	circleDemo();
-	for(int i = 0; i < 12; i++) {
-		std::wcout << "ctr: " << ctr << std::endl;
-		walkInCircleClockwise();
+	//only runs once and then infinite loops while spot is just standing there
+	// does not work due to problems wil trajectory on velocity move
+	for(;;){
+		circleDemo();
 	}
-	//point[rot] = 0;
-	//issueMove();
-	//spinDemo();
-//	spot.sit();
-	//wagTail();
-//	while(keepRunning) {
-		// walk to human then sit in front of them
-		//walk();
-		//sit();
-		// do motions demos
-		//circleDemo();
-		//spinDemo();
-		// reset then lie down
-		//reset();
-		//spot.sit();
-		// break loop
-		//keepRunning = false;
-	//}
-	
-	//closing comment should be here
 
-
-	usleep(5000000);
+	// for some reason will make the trajectory actually execute and not skip straight to returning
+	// maybe if place code in a while loop will not need usleep
+	usleep(500);
 	return 0;
 }
 
