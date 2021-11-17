@@ -1,10 +1,11 @@
 #include <demo.h>
 
+
 using namespace std;
 // velocity move has a max trajectory points of 6
 // trajectory pose also has a maximum (not sure) so set body pose at the end of each method
 // uses cubic interpolation for the trajectory
-
+#define loopIter 4
 // struct for all the movement data parameters
 double *point = new double[n_items];
 Trajectory3D trajPose; // trajectory pose used for setting pos and pitch,roll,yaw
@@ -12,7 +13,40 @@ Trajectory3D trajPose; // trajectory pose used for setting pos and pitch,roll,ya
 int ctr = 0;
 // trajectory increment might have to check if there is a visible difference between 250, 500, and 1000 milliseconds
 int incr = 1000;
+// number of trajectory points we feed through until the spot gives up
+int trajCount = loopIter;
+// gotta keep track of time
+google::protobuf::Timestamp endTime;
 
+//Constant: Incr of 1000
+//6, 1.51
+//5, 2.5
+//4, 4.77
+//3, 2.3
+//2, 2.58
+//1, 2.06
+
+//Constant: Loop of 4
+//incr 500,  2.97
+//incr 1000, 4.77
+//incr 2000, 4.25
+//incr 5000, 5.17
+
+// need to pass in the spotBase to every method
+void setTime(Spot &spot) {
+	printf("Count :%d\n", trajCount);
+	if(trajCount == loopIter)
+		endTime = spot.returnSpotBase()->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
+	else if(trajCount <= 0) 
+		trajCount = loopIter+1;
+	trajCount--;
+	endTime += TimeUtil::MillisecondsToDuration(incr);
+}
+// call this method right before velocityMove is called
+// for 5 times it will increment the endTime by 1000
+// after the 5th time we reset by getting the current time
+// endTime is what will be passed to the time field in velocityMove
+// and we get rid of time calculations in velocityMove
 
 // move the spot - should call each time after changing body movement (not position)
 // should still call even if set movement to 0 (or no longer moving)
@@ -35,12 +69,13 @@ void runTrajectory(Spot &spot) {
 }
 
 // walk in a circle counterclock-wise
-void walkInCircleCounter(Spot &spot, bool firstTime) {
+void walkInCircleCounter(Spot &spot) {
 	// speed forward (positive)
 	point[velX] = 2.0;
 	// direction of rotation (counterclockwise)
 	point[rot] = 1.5;
-	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, firstTime);
+	setTime(spot);
+	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
 }
 
 // walk in circle clockwise
@@ -49,7 +84,8 @@ void walkInCircleClockwise(Spot &spot) {
 	point[velX] = 2.0;
 	// direction of rotation (clockwise)
 	point[rot] = -1.5;
-	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+	setTime(spot);
+	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
 }
 
 // sit with front facing upwards and bottom pointed downwards
@@ -100,16 +136,24 @@ void playBow(Spot &spot) {
 void spinCounterClock(Spot &spot) {
 	// set the rotation to 1
 	// so turn the torso 1 (radian?) counterClockwise from current body frame  
+	point[velX] = 0;
+	point[velY] = 0;
+
 	point[rot] = 1;
-	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+	setTime(spot);
+	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
 }
 
 // spin clockwise in one place
 void spinClockwise(Spot &spot) {
 	// set the rotation to 1
-	// so turn the torso -1 clockwise from current body frame  
+	// so turn the torso -1 clockwise from current body frame
+	point[velX] = 0;
+	point[velY] = 0;
+	
 	point[rot] = -1;
-	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+	setTime(spot);
+	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
 }
 
 // reset all the positions of the body 
@@ -190,7 +234,7 @@ void circleDemo(Spot &spot) {
 	// walk in a circle in both directions 
 	// 12 makes a complete circle, 6 is a half circle, etc.
 	for(int i = 0; i < 12; i++) {
-		walkInCircleCounter(spot, false);
+		walkInCircleCounter(spot);
 	}
 	// spin to the opposite direction
 	for(int i = 0; i < 8; i++) {
@@ -247,6 +291,33 @@ void walkBackward(Spot &spot) {
 }
 
 // main function for running Spot clients
+// int main(int argc, char *argv[]) {
+// 	assert(argc == 3);
+
+// 	// get username and password
+// 	const std::string username = argv[1];
+// 	const std::string password = argv[2];
+
+// 	// spotbase testing code
+// 	Spot spot; // spot object
+// 	spot.basicInit(username, password);
+	
+// 	// stand and wait (otherwise wobbles when stands to reach trajectory)
+// 	// maybe if set initial trajectory to a larger number will not need usleep
+// 	spot.stand();
+// 	std::shared_ptr<CoreLayer::SpotBase> _spotBase;
+//     google::protobuf::Timestamp endTime = _spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
+
+
+// 	// walk in a circle in both directions 
+// 	// 12 makes a complete circle, 6 is a half circle, etc.
+// 	spinClockwise(spot);
+	
+// 	usleep(1000);
+
+// 	return 0;
+// }
+
 int main(int argc, char *argv[]) {
 	assert(argc == 3);
 
@@ -261,49 +332,43 @@ int main(int argc, char *argv[]) {
 	// stand and wait (otherwise wobbles when stands to reach trajectory)
 	// maybe if set initial trajectory to a larger number will not need usleep
 	spot.stand();
+    //google::protobuf::Timestamp endTime = _spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
 
-	// std::shared_ptr<ClientLayer::RobotStateClient> robotStateClient = spot.getRobotStateClient();
-    // RobotStateResponse robotStateResponse = robotStateClient->getRobotState();
-	// RobotState robotState = robotStateResponse.robot_state();
-	// KinematicState kinematicState = robotState.kinematic_state();
-	usleep(1000000);
-	std::shared_ptr<CoreLayer::SpotBase> _spotBase;
-	_spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
-	//wagTail(spot);
-	//walkInCircleCounter(spot);
+	clock_t start, check;
+
+
+	// walk in a circle in both directions 
 	// 12 makes a complete circle, 6 is a half circle, etc.
-	walkInCircleCounter(spot, true);
-	 for(int i = 0; i < 24; i++) {
-	 	walkInCircleCounter(spot, false);
-	// 	std::wcout << i << std::endl;
-	 }
-	// usleep(1000000);
-	// wagTail(spot);
-	
-	/*
-	// main function to run
-	bool keepRunning = true;
-
-	// fill the point vector with body enums to 0
-	fill_n(point, n_items, 0);
-
-	// main code to run demo
-	//note - why isn't walk running?? something wrong with plotting trajectory with velocity move
-	walkForward();
-	
-	circleDemo();
-
-	spinDemo();
-
-	wagDemo();
-	for(;;){
-		circleDemo();
+	int status = WALK_CLOCKWISE;
+	start = clock();
+	while(1) {
+		if(status == WALK_CLOCKWISE)
+			walkInCircleClockwise(spot);
+		else if(status == SPIN_CLOCKWISE)
+			spinClockwise(spot);
+		check = clock();
+		if(status == WALK_CLOCKWISE && ((float)check - start)/CLOCKS_PER_SEC >= 1.25 || status == SPIN_CLOCKWISE && ((float)check - start)/CLOCKS_PER_SEC >= 0.6){
+			if(status == WALK_CLOCKWISE){
+				printf("\nSTATUS SWITCHING.\n");
+				status = SPIN_CLOCKWISE;
+				start = check;
+			} else{
+				printf("TRAJECTORY TERMINATING.\n");
+				break;
+			}
+				
+		}
+		printf("clock: %f", ((float)check - start)/CLOCKS_PER_SEC);
 	}
+	
+	trajCount = loopIter;
+	/*for(int i = 0; i < 8; i++) {
+		
+		(spot);
+	}
+*/	
+	// usleep(1000);
 
-	// for some reason will make the trajectory actually execute and not skip straight to returning
-	// maybe if place code in a while loop will not need usleep
-	usleep(500);
-	*/
 	return 0;
 }
 
