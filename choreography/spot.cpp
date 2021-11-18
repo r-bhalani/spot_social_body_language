@@ -87,8 +87,8 @@ Spot::RobotCmdRespData Spot::stand(){
 	return respData;
 }
 
-Spot::RobotCmdRespData Spot::velocityMove(double x, double y, double angular, int64_t time, gravAlignedFrame frame, bool relTime){
-	RobotCommandResponse resp = _spotcontrol->velocityMove(x, y, angular, time, frame, relTime);
+Spot::RobotCmdRespData Spot::velocityMove(double x, double y, double angular, int64_t time, gravAlignedFrame frame){
+	RobotCommandResponse resp = _spotcontrol->velocityMove(x, y, angular, time, frame);
 	Spot::RobotCmdRespData respData(resp.robot_command_id(),
 		enumConvertRobotCommandStatus(resp.status()), 
 		Spot::RobotCmdRespData::CommandType::VELOCITY_MOVE);

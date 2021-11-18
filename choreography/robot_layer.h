@@ -225,7 +225,7 @@ namespace RobotLayer {
             Output: - Protobuf message that contains info about the request
             Side effects: -
         */
-        RobotCommandResponse velocityMove(double, double, double, int64_t, gravAlignedFrame, bool);
+        RobotCommandResponse velocityMove(double, double, double, int64_t, gravAlignedFrame);
         RobotCommandResponse velocityMoveTrajectory(double, double, double, gravAlignedFrame, bool, google::protobuf::Timestamp);
         std::shared_ptr<CoreLayer::SpotBase> returnSpotBase();
 

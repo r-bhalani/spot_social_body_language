@@ -481,19 +481,13 @@ RobotCommandResponse SpotControl::stand() {
     //}
 }
 
-RobotCommandResponse SpotControl::velocityMove(double x, double y, double rot, int64_t time, gravAlignedFrame frame , bool relTime){
+RobotCommandResponse SpotControl::velocityMove(double x, double y, double rot, int64_t time, gravAlignedFrame frame){
     RobotCommand command;
     SE2VelocityCommand_Request se2VelocityCommand_Request;
 
     // get robot clock from local timestamp
     google::protobuf::Timestamp endTime = _spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
     
-    // add the user-specified time
-    //TODO FOR SPOT SETTING SOCIAL BODY LANGUAGE -> INCREMENTING TIME INCORRECTLY
-    if(relTime){
-        //????????????????????????????????????????????????????????
-        endTime = TimeUtil::MillisecondsToTimestamp(0);
-    }
     endTime = endTime += TimeUtil::MillisecondsToDuration(time);
 
     se2VelocityCommand_Request.mutable_end_time()->CopyFrom(endTime);

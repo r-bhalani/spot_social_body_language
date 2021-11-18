@@ -56,7 +56,7 @@ void issueMove(Spot &spot) {
 		spot.stand();
 	}
 	else {
-		spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+		spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY);
 		
 	}
 }
@@ -266,7 +266,7 @@ void spinDemo(Spot &spot) {
 	}
 	// reset rot to 0
 	point[rot] = 0;
-	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+	//spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
 }
 
 // walk a number of steps forward
@@ -275,7 +275,7 @@ void walkForward(Spot &spot) {
 	point[velX] = 1.0;
 	// MOVE 5 steps forward with speed of 1.0 
 	for(int i = 0; i < steps; i++) {
-		spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+		//spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
 	}
 }
 
@@ -286,37 +286,10 @@ void walkBackward(Spot &spot) {
 	point[velX] = -1.0;
 	// call velocity move the number of times spot should move
 	for(int i = 0; i < steps; i++) {
-		spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+	//	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
 	}
 }
 
-// main function for running Spot clients
-// int main(int argc, char *argv[]) {
-// 	assert(argc == 3);
-
-// 	// get username and password
-// 	const std::string username = argv[1];
-// 	const std::string password = argv[2];
-
-// 	// spotbase testing code
-// 	Spot spot; // spot object
-// 	spot.basicInit(username, password);
-	
-// 	// stand and wait (otherwise wobbles when stands to reach trajectory)
-// 	// maybe if set initial trajectory to a larger number will not need usleep
-// 	spot.stand();
-// 	std::shared_ptr<CoreLayer::SpotBase> _spotBase;
-//     google::protobuf::Timestamp endTime = _spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
-
-
-// 	// walk in a circle in both directions 
-// 	// 12 makes a complete circle, 6 is a half circle, etc.
-// 	spinClockwise(spot);
-	
-// 	usleep(1000);
-
-// 	return 0;
-// }
 
 int main(int argc, char *argv[]) {
 	assert(argc == 3);
@@ -332,23 +305,25 @@ int main(int argc, char *argv[]) {
 	// stand and wait (otherwise wobbles when stands to reach trajectory)
 	// maybe if set initial trajectory to a larger number will not need usleep
 	spot.stand();
-    //google::protobuf::Timestamp endTime = _spotBase->getTimeSyncThread()->getEndpoint()->robotTimestampFromLocalTimestamp(TimeUtil::GetCurrentTime());
 
 	clock_t start, check;
-
-
+	/*incr = 250;
+	wagDemo(spot);
+	incr = 1000;*/
 	// walk in a circle in both directions 
 	// 12 makes a complete circle, 6 is a half circle, etc.
 	int status = WALK_CLOCKWISE;
 	start = clock();
+	int context_switch = 0;
 	while(1) {
 		if(status == WALK_CLOCKWISE)
-			walkInCircleClockwise(spot);
+			walkInCircleCounter(spot);
 		else if(status == SPIN_CLOCKWISE)
 			spinClockwise(spot);
 		check = clock();
-		if(status == WALK_CLOCKWISE && ((float)check - start)/CLOCKS_PER_SEC >= 1.25 || status == SPIN_CLOCKWISE && ((float)check - start)/CLOCKS_PER_SEC >= 0.6){
+		if((status == WALK_CLOCKWISE && context_switch >= 1050) || (status == SPIN_CLOCKWISE &&context_switch >= 1390)){
 			if(status == WALK_CLOCKWISE){
+				context_switch = 0;
 				printf("\nSTATUS SWITCHING.\n");
 				status = SPIN_CLOCKWISE;
 				start = check;
@@ -358,17 +333,24 @@ int main(int argc, char *argv[]) {
 			}
 				
 		}
-		printf("clock: %f", ((float)check - start)/CLOCKS_PER_SEC);
+		printf("clock: %f | counter: %d", ((float)check - start)/CLOCKS_PER_SEC, context_switch);
+		context_switch++;
 	}
-	
-	trajCount = loopIter;
-	/*for(int i = 0; i < 8; i++) {
-		
-		(spot);
-	}
-*/	
-	// usleep(1000);
+	start = clock();
 
+	while(1) {
+		context_switch = 0;
+		incr = 500;
+		wagDemo(spot);
+		check = clock();
+		if(((float)check - start)/CLOCKS_PER_SEC >= 2.9) {
+			printf("\nTERMINATING WAG TAIL.\n");
+			break;
+		}
+		printf("clock: %f\n", ((float)check - start)/CLOCKS_PER_SEC);
+	}
+	usleep(10000);
+	spot.sit();
 	return 0;
 }
 

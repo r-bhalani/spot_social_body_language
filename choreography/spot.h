@@ -76,7 +76,7 @@ public:
     /* Movement */
     RobotCmdRespData sit();
     RobotCmdRespData stand();
-    RobotCmdRespData velocityMove(double x, double y, double angular, int64_t time, gravAlignedFrame frame, bool relTime = false);
+    RobotCmdRespData velocityMove(double x, double y, double angular, int64_t time, gravAlignedFrame frame);
     RobotCmdRespData velocityMoveTrajectory(double x, double y, double angular, google::protobuf::Timestamp endTime, gravAlignedFrame frame, bool relTime = false);
     std::shared_ptr<CoreLayer::SpotBase> returnSpotBase();
     RobotCmdRespData trajectoryMove(Trajectory2D trajectory, int64_t time, gravAlignedFrame frame);
