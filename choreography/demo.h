@@ -22,8 +22,9 @@
 #include <spot/spot.h>
 #include <chrono>
 
-#define WALK_CLOCKWISE 0
-#define SPIN_CLOCKWISE 1
+#define WAG 0
+#define WALK_CLOCKWISE 1
+#define SPIN_CLOCKWISE 2
 
 
 enum {

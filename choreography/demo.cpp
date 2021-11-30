@@ -5,7 +5,7 @@ using namespace std;
 // velocity move has a max trajectory points of 6
 // trajectory pose also has a maximum (not sure) so set body pose at the end of each method
 // uses cubic interpolation for the trajectory
-#define loopIter 4
+#define loopIter 2
 // struct for all the movement data parameters
 double *point = new double[n_items];
 Trajectory3D trajPose; // trajectory pose used for setting pos and pitch,roll,yaw
@@ -76,6 +76,7 @@ void walkInCircleCounter(Spot &spot) {
 	point[rot] = 1.5;
 	setTime(spot);
 	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
+	printf("WALK IN CIRCLE INFO: \n %f %f %F ", point[velX], point[velY], point[rot]);
 }
 
 // walk in circle clockwise
@@ -227,7 +228,8 @@ void wagDemo(Spot &spot) {
 	playBow(spot);
 	wagTail(spot);
 	// reset pitch so stands straight
-	resetPitch(spot);		
+	resetPitch(spot);
+	trajPose.setPosInterp(false);
 }
 
 void circleDemo(Spot &spot) {
@@ -269,8 +271,6 @@ void spinDemo(Spot &spot) {
 	//spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
 }
 
-// walk a number of steps forward
-void walkForward(Spot &spot) {
 	int steps = 6;
 	point[velX] = 1.0;
 	// MOVE 5 steps forward with speed of 1.0 
@@ -307,11 +307,17 @@ int main(int argc, char *argv[]) {
 	spot.stand();
 
 	clock_t start, check;
+
+	
 	/*incr = 250;
 	wagDemo(spot);
 	incr = 1000;*/
 	// walk in a circle in both directions 
 	// 12 makes a complete circle, 6 is a half circle, etc.
+	ctr = 0;
+	incr = 1000;
+	float walk_clock_stops = 0;
+	float spin_stops = 0;
 	int status = WALK_CLOCKWISE;
 	start = clock();
 	int context_switch = 0;
@@ -320,35 +326,54 @@ int main(int argc, char *argv[]) {
 			walkInCircleCounter(spot);
 		else if(status == SPIN_CLOCKWISE)
 			spinClockwise(spot);
+		else if(status == WAG){
+			incr = 400;
+			wagDemo(spot);
+		}
 		check = clock();
-		if((status == WALK_CLOCKWISE && context_switch >= 1050) || (status == SPIN_CLOCKWISE &&context_switch >= 1390)){
+		if((status == WALK_CLOCKWISE && context_switch >= 1050) || (status == SPIN_CLOCKWISE && context_switch >= 1390) || (status == WAG && context_switch >= 1000)){
+			context_switch = 0;
+			printf("\nSTATUS SWITCHING.\n");
 			if(status == WALK_CLOCKWISE){
-				context_switch = 0;
-				printf("\nSTATUS SWITCHING.\n");
+				
+				walk_clock_stops = check;
+				
 				status = SPIN_CLOCKWISE;
-				start = check;
-			} else{
+				
+			} else if(status == SPIN_CLOCKWISE){
+				spin_stops = check;
+				status = WAG;
+			}
+			else if(status == WAG) {
 				printf("TRAJECTORY TERMINATING.\n");
+				//status = WALK_CLOCKWISE;
 				break;
 			}
+			start = check;
+
+
 				
 		}
 		printf("clock: %f | counter: %d", ((float)check - start)/CLOCKS_PER_SEC, context_switch);
 		context_switch++;
 	}
-	start = clock();
+	// start = clock();
+	// spin_stops = context_switch;
+	// while(1) {
+	// 	// context_switch = 0;
+	// 	incr = 400;
+	// 	wagDemo(spot);
+	// 	check = clock();
+	// 	if(((float)check - start)/CLOCKS_PER_SEC >= 2.9) {
+	// 		printf("\nTERMINATING WAG TAIL.\n");
+	// 		break;
+	// 	}
+	// 	printf("clock: %f\n", ((float)check - start)/CLOCKS_PER_SEC);
+	// }
 
-	while(1) {
-		context_switch = 0;
-		incr = 500;
-		wagDemo(spot);
-		check = clock();
-		if(((float)check - start)/CLOCKS_PER_SEC >= 2.9) {
-			printf("\nTERMINATING WAG TAIL.\n");
-			break;
-		}
-		printf("clock: %f\n", ((float)check - start)/CLOCKS_PER_SEC);
-	}
+
+
+	printf("END OF VEL MOVEMENTS. STATS - END OF WALK_CLOCKWISE: %f, END OF SPIN: %f, END OF WAG: %f", walk_clock_stops, spin_stops, (float)check);
 	usleep(10000);
 	spot.sit();
 	return 0;
