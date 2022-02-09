@@ -71,7 +71,7 @@ void runTrajectory(Spot &spot) {
 // walk in a circle counterclock-wise
 void walkInCircleCounter(Spot &spot) {
 	// speed forward (positive)
-	point[velX] = 2.0;
+	point[velX] = 2;
 	// direction of rotation (counterclockwise)
 	point[rot] = 1.5;
 	setTime(spot);
@@ -84,9 +84,10 @@ void walkInCircleClockwise(Spot &spot) {
 	// speed forward (positive)
 	point[velX] = 2.0;
 	// direction of rotation (clockwise)
-	point[rot] = -1.5;
+	point[rot] = -2;
 	setTime(spot);
 	spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
+	point[rot] = 0;
 }
 
 // sit with front facing upwards and bottom pointed downwards
@@ -287,6 +288,7 @@ void walkForward(Spot &spot) {
 	// negative x velocity is backwards
 	point[velX] = 1.0;
 	point[velY] = 0;
+	point[rot] = 0;
 	// call velocity move the number of times spot should move
 	setTime(spot);
 	//for(int i = 0; i < steps; i++) {
@@ -338,39 +340,48 @@ int main(int argc, char *argv[]) {
 		if(status == WALK_FORWARD)
 			walkForward(spot);
 		else if(status == WALK_BACKWARD)
-			walkBackward(spot);
+			walkInCircleCounter(spot);
 		else if(status == WALK_LEFT)
 			walkLeft(spot);
 		else if(status == WALK_RIGHT)
 			walkRight(spot);
 		
-		if((status == WALK_FORWARD && context_switch >= 750) || (status == WALK_BACKWARD && context_switch >= 400)|| (status == WALK_RIGHT && context_switch >= 400) || (status == WALK_LEFT && context_switch >= 400)){
+		if((status == WALK_FORWARD && context_switch >= 450) || (status == WALK_BACKWARD && context_switch >= 650)|| (status == WALK_RIGHT && context_switch >= 325) || (status == WALK_LEFT && context_switch >= 325)){
 			context_switch = 0;
 			printf("\nSTATUS SWITCHING.\n");
 			if(status == WALK_FORWARD){
 				status = WALK_BACKWARD;
 			}
 			else if(status == WALK_BACKWARD) {
-				status = WALK_LEFT;
-			}
-			else if(status == WALK_LEFT){
-				status = WALK_RIGHT;
-			}
-			else if(status == WALK_RIGHT){
+				// status = WALK_LEFT;
 				if(completed){
 					printf("TRAJECTORY TERMINATING.\n");
 					break;
 				}
 				else{
-					completed = true;
+					//completed = true;
 					status = WALK_FORWARD;
 				}
-				
 			}
+			// else if(status == WALK_LEFT){
+			// 	status = WALK_RIGHT;
+			// }
+			// else if(status == WALK_RIGHT){
+			// 	if(completed){
+			// 		printf("TRAJECTORY TERMINATING.\n");
+			// 		break;
+			// 	}
+			// 	else{
+			// 		completed = true;
+			// 		status = WALK_FORWARD;
+			// 	}
+				
+			// }
 		}
 		context_switch++;
 	}
 
+	//add spin and have it walk in the other direction
 	usleep(10000);
 	spot.sit();
 	return 0;
