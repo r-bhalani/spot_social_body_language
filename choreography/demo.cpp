@@ -222,8 +222,8 @@ void wagDemo(Spot &spot) {
 	sit(spot);
 	wagTail(spot);
 	// normal position and wag tail
-	resetPitch(spot);
-	wagTail(spot);
+	//resetPitch(spot);
+	//wagTail(spot);
 	// wag tail while in play bow
 	playBow(spot);
 	wagTail(spot);
@@ -271,14 +271,6 @@ void spinDemo(Spot &spot) {
 	//spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
 }
 
-	int steps = 6;
-	point[velX] = 1.0;
-	// MOVE 5 steps forward with speed of 1.0 
-	for(int i = 0; i < steps; i++) {
-		//spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
-	}
-}
-
 // walk a number of steps backwards
 void walkBackward(Spot &spot) {
 	int steps = 6;
@@ -286,7 +278,7 @@ void walkBackward(Spot &spot) {
 	point[velX] = -1.0;
 	// call velocity move the number of times spot should move
 	for(int i = 0; i < steps; i++) {
-	//	spot.velocityMove(point[velX], point[velY], point[rot], ctr+=incr, FLAT_BODY, false);
+		spot.velocityMoveTrajectory(point[velX], point[velY], point[rot], endTime, FLAT_BODY, false);
 	}
 }
 
@@ -308,7 +300,7 @@ int main(int argc, char *argv[]) {
 
 	clock_t start, check;
 
-	
+	//walkBackward(spot);
 	/*incr = 250;
 	wagDemo(spot);
 	incr = 1000;*/
@@ -321,6 +313,9 @@ int main(int argc, char *argv[]) {
 	int status = WALK_CLOCKWISE;
 	start = clock();
 	int context_switch = 0;
+	// while(1){
+		
+	// }
 	while(1) {
 		if(status == WALK_CLOCKWISE)
 			walkInCircleCounter(spot);
@@ -331,7 +326,7 @@ int main(int argc, char *argv[]) {
 			wagDemo(spot);
 		}
 		check = clock();
-		if((status == WALK_CLOCKWISE && context_switch >= 1050) || (status == SPIN_CLOCKWISE && context_switch >= 1390) || (status == WAG && context_switch >= 1000)){
+		if((status == WALK_CLOCKWISE && context_switch >= 900) || (status == SPIN_CLOCKWISE && context_switch >= 1000) || (status == WAG && context_switch >= 40)){
 			context_switch = 0;
 			printf("\nSTATUS SWITCHING.\n");
 			if(status == WALK_CLOCKWISE){
@@ -346,7 +341,8 @@ int main(int argc, char *argv[]) {
 			}
 			else if(status == WAG) {
 				printf("TRAJECTORY TERMINATING.\n");
-				//status = WALK_CLOCKWISE;
+				status = WALK_CLOCKWISE;
+				incr = 1000;
 				break;
 			}
 			start = check;
@@ -357,19 +353,6 @@ int main(int argc, char *argv[]) {
 		printf("clock: %f | counter: %d", ((float)check - start)/CLOCKS_PER_SEC, context_switch);
 		context_switch++;
 	}
-	// start = clock();
-	// spin_stops = context_switch;
-	// while(1) {
-	// 	// context_switch = 0;
-	// 	incr = 400;
-	// 	wagDemo(spot);
-	// 	check = clock();
-	// 	if(((float)check - start)/CLOCKS_PER_SEC >= 2.9) {
-	// 		printf("\nTERMINATING WAG TAIL.\n");
-	// 		break;
-	// 	}
-	// 	printf("clock: %f\n", ((float)check - start)/CLOCKS_PER_SEC);
-	// }
 
 
 
