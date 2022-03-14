@@ -6,4 +6,4 @@ https://docs.google.com/presentation/d/1DMjsoGu7AeB01ksL1d4BbpiFfofgNHopHR6yB1G5
 
 [Research Paper](https://github.com/r-bhalani/spot_social_body_language/blob/dd0333d2f3c3bf1ca755b61ba567a4808f391722/Spot%20Making%20Social%20Body%20Language.pdf)
 
-UT Austin Autonomous Mobile Robotics Laboratory
+UT Austin Robotics Laboratory
