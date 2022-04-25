@@ -1,7 +1,7 @@
 # Spot Making Social Body Language
 Boston Dynamics's autonomous quadruped Spot robot making canine-like social body language in order to establish a pathway for robots to communicate with humans. Runs two demonstrations, one with canine social body language and one without canine social body language, and asks participants to rate the degree of canine resemblance on a scale of 1 to 10. The degree of canine resemblance differs signficantly with a p-value of 0.019.
 
-**Winner of CNS Award for Excellence in Computer Science and Computer Engineering at 2022 UT Austin Undergraduate Research Forum**
+[**Winner of CNS Award for Excellence in Computer Science and Computer Engineering at 2022 UT Austin Undergraduate Research Forum**](https://cns.utexas.edu/tides/undergraduate/undergraduate-research-forum/awards-honors)
 
 **Submitted to 31st IEEE International Conference on Robot & Human Interactive Communication**
 
