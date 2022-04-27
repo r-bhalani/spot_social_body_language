@@ -1,4 +1,7 @@
 # Spot Making Social Body Language
+
+<img src="https://d33wubrfki0l68.cloudfront.net/dd322f87de0e52e2cf381e96d4392b135b6dca61/8fd3c/_images/spotframes.png" width="300">
+
 This project presents a development process to improve upon the basic building-blocks of Boston Dynamics's quadruped robot Spot navigation behaviors to produce behaviors that are more dog-like in appearance. 
 
 The process begins with the distribution of an open-ended survey which asks study participants what behaviors the robot could perform to look more dog-like. From these survey responses, a set of behaviors are chosen for development on the Spot: tail wag, play bow, sit, walk in circle, and spin, as well as matters of smoother movement and varying walking speed. Each of the chosen behaviors is hand-coded as a motion defined through a set of trajectory points that the robot follows, approximating the behavior of a real dog, and then the behaviors are compiled into "canine" and "non-canine" montages, which are performed by the robot in a busy public space on the UT Austin campus. 
@@ -17,3 +20,4 @@ https://docs.google.com/presentation/d/1DMjsoGu7AeB01ksL1d4BbpiFfofgNHopHR6yB1G5
 [Research Paper](https://github.com/r-bhalani/spot_social_body_language/blob/dd0333d2f3c3bf1ca755b61ba567a4808f391722/Spot%20Making%20Social%20Body%20Language.pdf)
 
 UT Austin Learning Agents Research Group, AI Lab
+
